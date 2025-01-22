@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from schemas.util import Pagination
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from db.database import SessionLocal
-from models.models import Mecanico
 from schemas.mecanico_schema import MecanicoCreate, MecanicoPaginatedResponse, MecanicoResponse, MecanicoUpdate
-import repositories.mecanico_repository as repo
+import repositories.mecanico_repository as mecanico_repository
 
 router = APIRouter(prefix="/mecanicos", tags=["Mecanicos"])
 
@@ -16,38 +14,29 @@ def get_session():
     session.close()
     
 @router.post("/", response_model=MecanicoResponse)
-async def create_mecanico(mecanico: MecanicoCreate, session: Session = Depends(get_session)):
-  try:
-    return repo.create_mecanico(session, mecanico.dict())
-  except Exception as e:
-    raise HTTPException(status_code=400, detail="Erro ao criar mecânico: " + str(e))
+async def create(mecanico: MecanicoCreate, session: Session = Depends(get_session)):
+  return mecanico_repository.create(session, mecanico.dict())
 
 @router.get("/", response_model=MecanicoPaginatedResponse)
-def get_mecanicos(skip: int = Query(0, ge=0), limit: int = Query(5, le=100), session: Session = Depends(get_session)):
-  try:
-    mecanicos = repo.get_mecanicos(session, skip, limit)
-  
-    return {
-      "mecanicos": mecanicos,
-      "pagination": {
-        "skip": skip,
-        "limit": limit,
-      }
+def list(skip: int = Query(0, ge=0), limit: int = Query(5, le=100), session: Session = Depends(get_session)):
+  mecanicos = mecanico_repository.list(session, skip, limit)
+
+  return {
+    "mecanicos": mecanicos,
+    "pagination": {
+      "skip": skip,
+      "limit": limit,
     }
-    
-  except Exception as e:
-    raise HTTPException(status_code=400, detail="Erro ao listar mecânico: " + str(e))
+  } 
 
 @router.get("/{mecanico_id}", response_model=MecanicoResponse)
-def get_mecanico(mecanico_id: int, session: Session = Depends(get_session)):
-  try:
-    return repo.get_mecanico(session, mecanico_id)
-  except Exception as e:
-    raise HTTPException(status_code=400, detail="Erro ao obter mecânico: " + str(e))
+def get(mecanico_id: int, session: Session = Depends(get_session)):
+  return mecanico_repository.get(session, mecanico_id)
   
 @router.put("/{mecanico_id}", response_model=MecanicoResponse)
-async def update_mecanico(mecanico_id: int, mecanico: MecanicoUpdate, session: Session = Depends(get_session)):
-  try:
-    return repo.update_mecanico(session, mecanico_id, mecanico.dict())
-  except Exception as e:
-    raise HTTPException(status_code=400, detail="Erro ao atualizar mecânico: " + str(e))
+async def update(mecanico_id: int, mecanico: MecanicoUpdate, session: Session = Depends(get_session)):
+  return mecanico_repository.update(session, mecanico_id, mecanico.dict())
+  
+@router.delete("/{mecanico_id}", response_model=MecanicoResponse)
+async def delete(mecanico_id: int, session: Session = Depends(get_session)):
+  return mecanico_repository.delete(session, mecanico_id)

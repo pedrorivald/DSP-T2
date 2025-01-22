@@ -1,20 +1,25 @@
 from sqlalchemy.orm import Session
-from models.models import Mecanico
+from exceptions.exceptions import BadRequestException, NotFoundException
+from models.models import Mecanico, OrdemServico
 
-def create_mecanico(session: Session, mecanico_data: dict):
+def create(session: Session, mecanico_data: dict):
   mecanico = Mecanico(**mecanico_data)
   session.add(mecanico)
   session.commit()
   session.refresh(mecanico)
   return mecanico
  
-def get_mecanicos(session: Session, skip: int = 0, limit: int = 5):
+def list(session: Session, skip: int = 0, limit: int = 5):
   return session.query(Mecanico).offset(skip).limit(limit).all()
 
-def get_mecanico(session: Session, mecanico_id: int):
-  return session.query(Mecanico).filter(Mecanico.id == mecanico_id).first()
+def get(session: Session, mecanico_id: int):
+  mecanico = session.query(Mecanico).filter(Mecanico.id == mecanico_id).first()
+  if not mecanico:
+    raise NotFoundException(f"Mecânico com id {mecanico_id} não encontrado.")
+    
+  return mecanico
 
-def update_mecanico(session: Session, mecanico_id: int, mecanico_data: dict):
+def update(session: Session, mecanico_id: int, mecanico_data: dict):
   mecanico = session.query(Mecanico).filter(Mecanico.id == mecanico_id).first()
   if mecanico:
     for key, value in mecanico_data.items():
@@ -22,4 +27,18 @@ def update_mecanico(session: Session, mecanico_id: int, mecanico_data: dict):
     session.commit()
     session.refresh(mecanico)
     return mecanico
-  return None
+  else:
+    raise NotFoundException(f"Mecânico com id {mecanico_id} não encontrado.")
+
+def delete(session: Session, mecanico_id: int):
+  mecanico = session.query(Mecanico).filter(Mecanico.id == mecanico_id).first()
+  if not mecanico:
+    raise NotFoundException(f"Mecânico com id {mecanico_id} não encontrado.")
+    
+  mecanico_is_related = session.query(OrdemServico).filter(OrdemServico.mecanico_id == mecanico_id).first()
+  if mecanico_is_related:
+    raise BadRequestException(f"Mecânico com id {mecanico_id} está relacionado a uma ordem de serviço.")  
+  
+  session.delete(mecanico)
+  session.commit()
+  return mecanico
