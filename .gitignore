@@ -27,7 +27,7 @@ build/
 
 # FastAPI
 # Arquivos temporários ou de cache criados pelo FastAPI durante o desenvolvimento
-*.db
+# *.db
 *.sqlite3
 
 # Arquivos de configuração de IDEs
