@@ -5,7 +5,7 @@ from models.models import Cliente, OrdemServico
 def create(session: Session, cliente_data: dict):
   cliente = Cliente(**cliente_data)
   session.add(cliente)
-  session.commit()
+  session.flush()
   session.refresh(cliente)
   return cliente
  
@@ -24,7 +24,7 @@ def update(session: Session, cliente_id: int, cliente_data: dict):
   if cliente:
     for key, value in cliente_data.items():
       setattr(cliente, key, value)
-    session.commit()
+    session.flush()
     session.refresh(cliente)
     return cliente
   else:
@@ -40,5 +40,5 @@ def delete(session: Session, cliente_id: int):
     raise BadRequestException(f"Cliente com id {cliente_id} está relacionado a uma ordem de serviço.")  
   
   session.delete(cliente)
-  session.commit()
+  session.flush()
   return cliente

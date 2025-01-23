@@ -13,14 +13,16 @@ def get_session():
   session = SessionLocal()
   try:
     yield session
+    session.commit()
+  except Exception:
+    session.rollback()
+    raise
   finally:
     session.close()
     
-ordem_servico_repository = ordem_servico_repository.OrdemServicoRepository(session=next(get_session()))
-    
 @router.post("/", response_model=OrdemServicoResponse)
 async def create(ordem_servico: OrdemServicoCreate, session: Session = Depends(get_session)):
-  return ordem_servico_repository.create(data=ordem_servico)
+  return ordem_servico_repository.create(session, data=ordem_servico)
 
 @router.get("/", response_model=OrdemServicoPaginatedResponse)
 def list(
@@ -52,6 +54,11 @@ def list(
   resultado = []
   for ordem in ordens_servicos:
     resultado.append({
+      "id": ordem.id,
+      "data_abertura": ordem.data_abertura,
+      "data_conclusao": ordem.data_conclusao,
+      "valor": ordem.valor,
+      "situacao": ordem.situacao,
       "cliente": {
         "id": ordem.cliente.id,
         "nome": ordem.cliente.nome,
@@ -65,11 +72,7 @@ def list(
         "sobrenome": ordem.mecanico.sobrenome,
         "telefone": ordem.mecanico.telefone,
         "email": ordem.mecanico.email
-      },
-      "data_abertura": ordem.data_abertura,
-      "data_conclusao": ordem.data_conclusao,
-      "valor": ordem.valor,
-      "situacao": ordem.situacao
+      }
     })
 
   return {
@@ -86,7 +89,7 @@ def get(ordem_servico_id: int, session: Session = Depends(get_session)):
   
 @router.put("/{ordem_servico_id}", response_model=OrdemServicoResponse)
 async def update(ordem_servico_id: int, ordem_servico: OrdemServicoUpdate, session: Session = Depends(get_session)):
-  return ordem_servico_repository.update(session, ordem_servico_id, ordem_servico.dict())
+  return ordem_servico_repository.update(session, ordem_servico_id, ordem_servico)
 
 @router.delete("/{ordem_servico_id}", response_model=OrdemServicoResponse)
 async def delete(ordem_servico_id: int, session: Session = Depends(get_session)):
@@ -96,18 +99,18 @@ async def delete(ordem_servico_id: int, session: Session = Depends(get_session))
 async def conclude(ordem_servico_id: int, session: Session = Depends(get_session)):
   return ordem_servico_repository.concluir(session, ordem_servico_id)
 
-@router.delete("/{ordem_servico_id}/pecas/{peca_id}", response_model=OrdemServicoResponse)
+@router.delete("/{ordem_servico_id}/pecas/{peca_id}", response_model=dict)
 async def remove_peca(ordem_servico_id: int, peca_id: int, session: Session = Depends(get_session)):
   return ordem_servico_repository.remove_peca(session, ordem_servico_id, peca_id)
 
-@router.delete("/{ordem_servico_id}/servicos/{servico_id}", response_model=OrdemServicoResponse)
+@router.delete("/{ordem_servico_id}/servicos/{servico_id}", response_model=dict)
 async def remove_servico(ordem_servico_id: int, servico_id: int, session: Session = Depends(get_session)):
   return ordem_servico_repository.remove_servico(session, ordem_servico_id, servico_id)
 
-@router.post("/{ordem_servico_id}/pecas", response_model=OrdemServicoResponse)
+@router.post("/{ordem_servico_id}/pecas", response_model=dict)
 async def add_peca(ordem_servico_id: int, peca: OrdemServicoPecaCreate, session: Session = Depends(get_session)):
   return ordem_servico_repository.add_peca(session, ordem_servico_id, peca)
 
-@router.post("/{ordem_servico_id}/servicos", response_model=OrdemServicoResponse)
+@router.post("/{ordem_servico_id}/servicos", response_model=dict)
 async def add_servico(ordem_servico_id: int, servico_id: int, session: Session = Depends(get_session)):
   return ordem_servico_repository.add_servico(session, ordem_servico_id, servico_id)

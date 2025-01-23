@@ -51,7 +51,7 @@ class OrdemServico(Base):
   data_abertura = Column(DateTime, nullable=False)
   data_conclusao = Column(DateTime, nullable=True)
   situacao = Column(String, nullable=False)
-  valor = Column(Float)
+  valor = Column(Float, nullable=True)
 
   cliente = relationship("Cliente", back_populates="ordens")
   mecanico = relationship("Mecanico", back_populates="ordens")

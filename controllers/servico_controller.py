@@ -10,6 +10,10 @@ def get_session():
   session = SessionLocal()
   try:
     yield session
+    session.commit()
+  except Exception:
+    session.rollback()
+    raise
   finally:
     session.close()
     
@@ -28,6 +32,10 @@ def list(skip: int = Query(0, ge=0), limit: int = Query(5, le=100), session: Ses
       "limit": limit,
     }
   } 
+  
+@router.get("/count", response_model=dict)
+def count(session: Session = Depends(get_session)):
+  return servico_repository.count(session)
 
 @router.get("/{servico_id}", response_model=ServicoResponse)
 def get(servico_id: int, session: Session = Depends(get_session)):

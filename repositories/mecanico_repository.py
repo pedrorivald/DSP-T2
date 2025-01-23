@@ -5,7 +5,7 @@ from models.models import Mecanico, OrdemServico
 def create(session: Session, mecanico_data: dict):
   mecanico = Mecanico(**mecanico_data)
   session.add(mecanico)
-  session.commit()
+  session.flush()
   session.refresh(mecanico)
   return mecanico
  
@@ -24,7 +24,7 @@ def update(session: Session, mecanico_id: int, mecanico_data: dict):
   if mecanico:
     for key, value in mecanico_data.items():
       setattr(mecanico, key, value)
-    session.commit()
+    session.flush()
     session.refresh(mecanico)
     return mecanico
   else:
@@ -40,5 +40,5 @@ def delete(session: Session, mecanico_id: int):
     raise BadRequestException(f"Mecânico com id {mecanico_id} está relacionado a uma ordem de serviço.")  
   
   session.delete(mecanico)
-  session.commit()
+  session.flush()
   return mecanico

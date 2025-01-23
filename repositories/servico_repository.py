@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from exceptions.exceptions import BadRequestException, NotFoundException
 from models.models import OrdemServicoServico, Servico
@@ -7,7 +8,7 @@ def create(session: Session, servico_data: dict):
   servico.ativo = True
   
   session.add(servico)
-  session.commit()
+  session.flush()
   session.refresh(servico)
   return servico
  
@@ -15,11 +16,15 @@ def list(session: Session, skip: int = 0, limit: int = 5):
   return session.query(Servico).offset(skip).limit(limit).all()
 
 def get(session: Session, servico_id: int):
-  servico =  session.query(Servico).filter(Servico.id == servico_id).first()
+  servico = session.query(Servico).filter(Servico.id == servico_id).first()
   if not servico:
     raise NotFoundException(f"Serviço com id {servico_id} não encontrado.")
       
   return servico
+
+def count(session: Session):
+  result = session.query(func.count(Servico.id)).scalar() or 0
+  return { "quantidade": result }
 
 def update(session: Session, servico_id: int, servico_data: dict):
   servico = session.query(Servico).filter(Servico.id == servico_id).first()
@@ -27,7 +32,7 @@ def update(session: Session, servico_id: int, servico_data: dict):
   if servico:
     for key, value in servico_data.items():
       setattr(servico, key, value)
-    session.commit()
+    session.flush()
     session.refresh(servico)
     return servico
   else:
@@ -43,5 +48,5 @@ def delete(session: Session, servico_id: int):
     raise BadRequestException(f"Serviço com id {servico_id} está relacionado a uma ordem de serviço.")
     
   session.delete(servico)
-  session.commit()
+  session.flush()
   return servico

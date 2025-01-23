@@ -12,8 +12,6 @@ class OrdemServicoPecaCreate(BaseModel):
 class OrdemServicoCreate(BaseModel):
   cliente_id: int
   mecanico_id: int
-  servicos: List[int]
-  pecas: List[OrdemServicoPecaCreate]
 
 class OrdemServicoUpdate(BaseModel):
   cliente_id: int
@@ -26,14 +24,27 @@ class OrdemServicoResponse(BaseModel):
   data_abertura: datetime
   data_conclusao: Optional[datetime] = None
   situacao: str
-  valor: float
+  valor: Optional[float] = None
+
+  class Config:
+    orm_mode = True
+    
+class OrdemServicoPartialResponse(BaseModel):
+  id: int
+  data_abertura: datetime
+  data_conclusao: Optional[datetime] = None
+  situacao: str
+  valor: Optional[float] = None
+  
+  cliente: ClienteResponse
+  mecanico: MecanicoResponse
 
   class Config:
     orm_mode = True
     
 class OrdemServicoPaginatedResponse(BaseModel):
   pagination: Pagination
-  ordens_servicos: List[OrdemServicoResponse]
+  ordens_servicos: List[OrdemServicoPartialResponse]
 
   class Config:
     orm_mode = True
@@ -57,7 +68,7 @@ class OrdemServicoFullResponse(BaseModel):
   data_abertura: datetime
   data_conclusao: Optional[datetime] = None
   situacao: str
-  valor: float
+  valor: Optional[float] = None
   
   cliente: ClienteResponse
   mecanico: MecanicoResponse
@@ -67,4 +78,5 @@ class OrdemServicoFullResponse(BaseModel):
 
   class Config:
     orm_mode = True
+
 
