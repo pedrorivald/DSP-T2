@@ -12,3 +12,7 @@ alembic downgrade -1
 
 uvicorn main:app --reload --port 8000
 
+# Rodar no Docker
+`docker build -t dsp-t2 .`
+`docker run -d -p 8000:8000 dsp-t2`
+Acessar em http://localhost:8000
